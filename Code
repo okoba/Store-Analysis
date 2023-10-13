@@ -1,0 +1,435 @@
+import pandas as pd 
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics.pairwise import euclidean_distances
+from scipy.stats import ttest_ind
+from scipy.stats import pearsonr
+data = pd.read_csv(r'C:\Users\hp\Downloads\QVI_data.csv')
+data
+# Convert the Date column to datetime format
+data['DATE'] = pd.to_datetime(data['DATE'])
+# Extract month and year from the Date column
+data['Month'] = data['DATE'].dt.to_period('M')
+data['Month']
+output: 0 2018-10
+1 2018-09
+2 2019-03
+3 2019-03
+4 2018-11
+ ... 
+264829 2018-12
+264830 2018-10
+264831 2018-10
+264832 2018-10
+264833 2018-12
+Name: Month, Length: 264834, dtype: period[M]
+# Calculate total sales revenue, total number of customers, and average 
+transactions per customer per month
+avg_trans_per_cus = data.groupby(['STORE_NBR', 'Month']).agg({
+ 'TOT_SALES': 'sum',
+ 'LYLTY_CARD_NBR': 'nunique',
+ 'TXN_ID': 'count'
+}).reset_index()
+# Calculate total sales revenue, total number of customers, and average 
+transactions per customer per month
+monthly_sales = data.groupby(['STORE_NBR', 'Month']).agg({
+ 'TOT_SALES': 'sum',
+ 'LYLTY_CARD_NBR': 'nunique',
+ 'TXN_ID': 'count'
+}).reset_index()
+# Calculate average transactions per customer
+avg_trans_per_cus['Avg_Transactions_Per_Customer'] = monthly_sales['TXN_ID'] 
+/ monthly_sales['LYLTY_CARD_NBR']
+monthly_sales['Avg_Transactions_Per_Customer'] = monthly_sales['TXN_ID'] / 
+monthly_sales['LYLTY_CARD_NBR']
+monthly_sales['Avg_Transactions_Per_Customer']
+output: 0 1.061224
+1 1.023810
+2 1.050847
+3 1.022727
+4 1.021739
+ ... 
+3164 1.066667
+3165 1.060000
+3166 1.037037
+3167 1.176471
+3168 1.088235
+Name: Avg_Transactions_Per_Customer, Length: 3169, dtype: float64
+# Calculate total sales revenue per month for each store
+total_sales_over_months = data.groupby(['STORE_NBR', 'Month'])['TOT_SALES'].s
+um().reset_index()
+# Print or visualize the result
+print(total_sales_over_months)
+ STORE_NBR Month TOT_SALES
+0 1 2018-07 206.9
+1 1 2018-08 176.1
+2 1 2018-09 278.8
+3 1 2018-10 188.1
+4 1 2018-11 192.6
+... ... ... ...
+3164 272 2019-02 395.5
+3165 272 2019-03 442.3
+3166 272 2019-04 445.1
+3167 272 2019-05 314.6
+3168 272 2019-06 312.1
+[3169 rows x 3 columns]
+Visualized Analysis 
+# Extract month and year from the 'Date' column
+data['Month'] = data['DATE'].dt.to_period('M')
+# Calculate total sales revenue per month for each store
+total_sales_over_months = data.groupby(['STORE_NBR', 
+'Month'])['TOT_SALES'].sum().reset_index()
+# Extract unique months for the visualization
+unique_months = total_sales_over_months['Month'].dt.to_timestamp()
+# To visualize the total sales over months for a specific store (e.g., store 77)
+store_77_sales = 
+total_sales_over_months[total_sales_over_months['STORE_NBR'] == 77]
+# Convert store_77_sales['Month'] to Timestamp
+store_77_sales['Month'] = store_77_sales['Month'].dt.to_timestamp()
+# Convert unique_months to a list before slicing
+unique_months_list = list(unique_months)
+store_77_sales_filtered = 
+store_77_sales[store_77_sales['Month'].isin(unique_months_list)]
+# Plot
+plt.plot(store_77_sales_filtered['Month'], store_77_sales_filtered['TOT_SALES'], 
+marker='o')
+plt.title('Total Sales Over Months for Store 77')
+plt.xlabel('Month')
+plt.ylabel('Total Sales')
+plt.show()
+# Calculate total sales revenue per store and month
+total_sales = data.groupby(['STORE_NBR', 
+'Month'])['TOT_SALES'].sum().reset_index()
+# Print or further analyze the total sales data
+print(total_sales)
+Output: 
+ STORE_NBR Month TOT_SALES
+0 1 2018-07 206.9
+1 1 2018-08 176.1
+2 1 2018-09 278.8
+3 1 2018-10 188.1
+4 1 2018-11 192.6
+... ... ... ...
+3164 272 2019-02 395.5
+3165 272 2019-03 442.3
+3166 272 2019-04 445.1
+3167 272 2019-05 314.6
+3168 272 2019-06 312.1
+[3169 rows x 3 columns]
+# Convert 'Sales' to a numeric type (float) if it's not already
+data['Sales'] = pd.to_numeric(data['TOT_SALES'], errors='coerce')
+monthly_sales = data.groupby(['STORE_NBR', 'Month']).agg({
+ 'TXN_ID': 'count'
+}).reset_index()
+monthly_sales
+STORE_NBR Month TXN_ID
+0 1 2018-07 52
+1 1 2018-08 43
+2 1 2018-09 62
+3 1 2018-10 45
+4 1 2018-11 47
+... ... ... ...
+3164 272 2019-02 48
+3165 272 2019-03 53
+3166 272 2019-04 56
+3167 272 2019-05 40
+3168 272 2019-06 37
+3169 rows × 3 columns
+plt.figure(figsize=(19, 19))
+plt.subplot(3, 1, 2)
+plt.plot(data['Month'].astype(str), data['LYLTY_CARD_NBR'], linestyle='-', 
+marker='o', color='g', alpha=0.7, label='Total Customers')
+plt.title('store_77_Total Customers Over Months', fontsize=16)
+plt.xlabel('Month', fontsize=12)
+plt.ylabel('Total Customers', fontsize=12)
+plt.grid(True)
+plt.legend()
+<matplotlib.legend.Legend at 0x25e5555fcd0>
+plt.figure(figsize=(19, 19))
+plt.subplot(3, 1, 2)
+plt.plot(avg_trans_per_cus['Month'].astype(str), 
+avg_trans_per_cus['Avg_Transactions_Per_Customer'], marker='o', color='g', 
+alpha=0.7, label='Total Customers')
+plt.title('store_77_avg_transactions Over Months', fontsize=16)
+plt.xlabel('Month', fontsize=12)
+plt.ylabel('avg_transactions by customer', fontsize=12)
+plt.grid(True)
+plt.legend()
+<matplotlib.legend.Legend at 0x25e57008ac0>
+def calculate_distance_metric(trial_store, control_store, data):
+ # Assuming your data has columns like 'TOT_SALES', 'LYLTY_CARD_NBR', 
+'Avg_Transactions_Per_Customer'
+ trial_data = avg_trans_per_cus[avg_trans_per_cus['STORE_NBR'] == 
+trial_store][['TOT_SALES', 'LYLTY_CARD_NBR', 'Avg_Transactions_Per_Customer']]
+ control_data = avg_trans_per_cus[avg_trans_per_cus['STORE_NBR'] == 
+control_store][['TOT_SALES', 'LYLTY_CARD_NBR', 
+'Avg_Transactions_Per_Customer']]
+ trial_data = trial_data.apply(pd.to_numeric, errors='coerce')
+ control_data = control_data.apply(pd.to_numeric, errors='coerce')
+ # Drop NaN values that may have resulted from non-numeric conversion
+ trial_data = trial_data.dropna()
+ control_data = control_data.dropna()
+ if len(trial_data) < 2 or len(control_data) < 2:
+ print(f"Insufficient data to calculate correlation for Trial Store {trial_store} 
+and Control Store {control_store}.")
+ return None
+ if len(trial_data) != len(control_data):
+ raise ValueError("Trial and control data must have the same length.")
+ # Calculate Pearson correlation 
+ correlation, _ = pearsonr(trial_data.values.flatten(), 
+control_data.values.flatten())
+ 
+ # Fix the indentation of the print statement
+ print(f"Correlation between Trial Store {trial_store} and Control Store 
+{control_store}: {correlation}")
+ return correlation
+# Example usage
+trial_store = 77
+candidate_stores = [86, 88, 90, 92] 
+data = avg_trans_per_cus 
+for control_store in candidate_stores:
+ calculate_distance_metric(trial_store, control_store, data)
+Output: 
+Correlation between Trial Store 77 and Control Store 86: 0.9810791170930222
+Correlation between Trial Store 77 and Control Store 88: 0.983200795877673
+Correlation between Trial Store 77 and Control Store 90: 0.9618919747499091
+Insufficient data to calculate correlation for Trial Store 77 and Control Store 92.
+Insights: 
+1. High Correlation with Control Store 86 (0.98):
+ - The correlation of 0.98 between Trial Store 77 and Control Store 86 indicates a 
+strong positive relationship. This suggests that the sales patterns of these two 
+stores are highly similar during the specified period.
+2. Strong Correlation with Control Store 88 (0.98):
+ - The correlation of 0.98 between Trial Store 77 and Control Store 88 is also 
+highly significant. It suggests that changes in sales for one store are mirrored by 
+the other, making Control Store 88 a reliable benchmark for assessing the trial 
+store's performance.
+3. High Correlation with Control Store 90 (0.96):
+ - Although slightly lower than the previous correlations, a 0.96 correlation 
+between Trial Store 77 and Control Store 90 still indicates a strong relationship. 
+This suggests that Control Store 90 is a valuable point of comparison for 
+understanding the trial store's performance.
+4. Insufficient Data for Control Store 92:
+ - Unfortunately, there is insufficient data to calculate the correlation between 
+Trial Store 77 and Control Store 92. This lack of correlation information may be 
+due to missing or limited data for one of the stores during the specified period.
+Recommendations:
+1. Use Control Stores 86 and 88 as Benchmarks:
+ - Given the high correlations with Control Stores 86 and 88, stakeholders should 
+consider using these stores as reliable benchmarks to evaluate the trial store's 
+performance. Trends and promotions affecting one store are likely to similarly 
+impact the other.
+2. Careful Analysis of Control Store 90:
+ - While the correlation with Control Store 90 is strong, stakeholders should 
+carefully analyze the factors influencing this relationship. Any deviations or 
+unique characteristics should be considered when using Control Store 90 as a 
+reference point.
+3. Seek Additional Data for Control Store 92:
+ - Since there is insufficient data for the correlation with Control Store 92, 
+stakeholders should seek to gather more information. Understanding the 
+correlation with Control Store 92 can provide a more comprehensive view of the 
+trial store's performance.
+4. Monitor Over Time:
+ - Continuous monitoring of the correlation over time is recommended. Changes 
+in store layout, marketing strategies, or external factors may influence the 
+correlation between the trial store and control stores.
+5. Consider External Factors:
+ - It's essential to consider external factors such as regional events, holidays, or 
+economic conditions that might impact sales. These factors could contribute to 
+variations in correlations between stores.
+By leveraging the strong correlations and addressing data gaps, stakeholders can 
+make informed decisions regarding the trial store's performance and implement 
+effective strategies for improvement.
+def control_store_selection(trial_store, candidate_stores):
+ 
+ trial_stores = [77, 86, 88]
+control_stores_dict = {}
+for trial_store in trial_stores:
+ candidate_stores = data[data['STORE_NBR'] != trial_store]['STORE_NBR'].tolist()
+ 
+ control_stores = control_store_selection(trial_store, candidate_stores)
+ 
+ control_stores_dict[trial_store] = control_stores
+for trial_store, control_stores in control_stores_dict.items():
+ print(f'Trial Store {trial_store}: Control Stores {control_stores}')
+ 
+ import random
+def control_store_selection(trial_store, candidate_stores):
+ if candidate_stores:
+ return random.choice(candidate_stores)
+ else:
+ return None
+Output: 
+Trial Store 77: Control Stores None
+Trial Store 86: Control Stores None
+Trial Store 88: Control Stores None
+Insights:
+1. No Designated Control Stores for Trial Store 77:
+ - Trial Store 77 does not have any designated control stores for comparison. This 
+absence of control stores limits the ability to assess the trial store's performance 
+in relation to a benchmark. To derive meaningful insights, it's essential to 
+establish control stores that are similar in characteristics and market conditions.
+2. No Designated Control Stores for Trial Store 86:
+ - Similar to Trial Store 77, Trial Store 86 also lacks designated control stores. 
+Without control stores, it becomes challenging to gauge the effectiveness of 
+strategies or promotions implemented in Trial Store 86. Establishing control 
+stores is crucial for meaningful performance evaluation.
+3. No Designated Control Stores for Trial Store 88:
+ - Trial Store 88 faces the same issue, lacking designated control stores. This 
+hinders the ability to make reliable comparisons and draw insights regarding the 
+impact of various factors on the store's performance.
+Recommendations:
+1. Identify Suitable Control Stores:
+ - Stakeholders should identify and designate suitable control stores for Trial 
+Stores 77, 86, and 88. Control stores should have similar characteristics, such as 
+location, size, customer demographics, and historical sales patterns. This will 
+enable a more accurate assessment of the trial stores' performance.
+2. Consider Comparable Metrics:
+ - When selecting control stores, consider comparable metrics such as foot 
+traffic, sales volume, and product assortment. The goal is to choose control stores 
+that closely resemble the trial stores in terms of operational and market 
+conditions.
+3. Implement a Robust Evaluation Framework:
+ - Once control stores are identified, stakeholders should implement a robust 
+evaluation framework. This involves tracking and comparing key performance 
+indicators (KPIs) such as sales growth, customer satisfaction, and promotional 
+effectiveness between the trial and control stores.
+4. Adjust Strategies Based on Insights:
+ - Analyze the data collected from the trial and control stores to gain insights into 
+the effectiveness of different strategies. Adjust marketing, pricing, and 
+operational strategies based on these insights to optimize the performance of the 
+trial stores.
+5. Continuous Monitoring and Iteration:
+ - Establish a system for continuous monitoring and iteration. Markets and 
+consumer behavior can change, so regularly reassessing the choice of control 
+stores and the overall evaluation framework ensures ongoing relevance and 
+accuracy in performance assessments.
+By addressing the absence of designated control stores and implementing these 
+recommendations, stakeholders can enhance their ability to assess, understand, 
+and optimize the performance of Trial Stores 77, 86, and 88.
+from scipy import stats
+def compare_trial_control(trial_data, control_data):
+ _, p_value_sales = stats.ttest_ind(trial_data['TOT_SALES'], 
+control_data['TOT_SALES'])
+ print(f"P-value for total sales: {p_value_sales}")
+ trial_avg_customers = trial_data['LYLTY_CARD_NBR'] / trial_data['STORE_NBR']
+ control_avg_customers = control_data['LYLTY_CARD_NBR'] / 
+control_data['TXN_ID']
+ _, p_value_avg_customers = stats.ttest_ind(trial_avg_customers, 
+control_avg_customers)
+ print(f"P-value for average customers per transaction: 
+{p_value_avg_customers}")
+trial_store = 77 
+control_store = 86 
+trial_data = original_dataset[original_dataset['STORE_NBR'] == trial_store]
+control_data = original_dataset[original_dataset['STORE_NBR'] == control_store]
+compare_trial_control(trial_data, control_data)
+output : 
+P-value for total sales: 1.746051651453781e-36
+P-value for average customers per transaction: 4.396815997331318e-47
+def compare_trial_control_pairs(trial_data, control_data):
+ # Task 5a: Testing if total sales are significantly different
+ t_stat, p_value = ttest_ind(trial_data['TOT_SALES'], control_data['TOT_SALES'])
+ 
+ print(f'T-test for total sales: t-statistic = {t_stat}, p-value = {p_value}')
+ if p_value < 0.05:
+ print('Total sales are significantly different.')
+ else:
+ print('Total sales are not significantly different.')
+ # Task 5b: Identifying the driver of change
+ trial_customers_per_transaction = trial_data['LYLTY_CARD_NBR'] / 
+trial_data['TXN_ID']
+ control_customers_per_transaction = control_data['LYLTY_CARD_NBR'] / 
+control_data['TXN_ID']
+ # Compare customers per transaction
+ t_stat_cust, p_value_cust = ttest_ind(trial_customers_per_transaction, 
+control_customers_per_transaction)
+ print(f'T-test for customers per transaction: t-statistic = {t_stat_cust}, p-value = 
+{p_value_cust}')
+ if p_value_cust < 0.05:
+ print('Customers per transaction are significantly different.')
+ else:
+ print('Customers per transaction are not significantly different.')
+compare_trial_control_pairs(trial_data,control_data)
+Insights:
+1. Highly Significant P-value for Total Sales (1.75e-36):
+ - The extremely low p-value for total sales (1.75e-36) indicates strong evidence 
+against the null hypothesis. In practical terms, this suggests a statistically 
+significant difference in total sales compared to the expected values or another 
+group. There is substantial evidence that the observed total sales are not due to 
+random chance.
+2. Highly Significant P-value for Average Customers per Transaction (4.40e-47):
+ - Similarly, the very low p-value for average customers per transaction (4.40e47) implies a highly significant difference. This suggests that the observed average 
+number of customers per transaction is unlikely to have occurred by random 
+chance alone. There are significant variations that warrant attention and analysis.
+Recommendations:
+1. Investigate Factors Impacting Total Sales:
+ - Stakeholders should conduct a thorough investigation into the factors
+influencing total sales. This may involve analyzing marketing strategies, product 
+placements, pricing, and other variables that could contribute to the observed 
+differences. Understanding these factors is crucial for optimizing sales 
+performance.
+2. Explore Customer Behavior and Transaction Patterns:
+ - Given the significant difference in average customers per transaction, 
+stakeholders should delve into customer behavior and transaction patterns. 
+Identify whether certain promotions, time periods, or other factors are 
+influencing the number of customers per transaction. This insight can guide 
+strategies for enhancing customer engagement and increasing transaction values.
+3. Consider External Variables:
+ - Assess whether external variables such as seasonality, economic conditions, or 
+industry trends might be contributing to the observed differences in total sales 
+and average customers per transaction. Understanding the broader context is 
+essential for developing effective strategies.
+4. Optimize Marketing and Promotional Efforts:
+ - Tailor marketing and promotional efforts based on the insights gained from the 
+analysis. If specific promotions or campaigns are associated with the observed 
+differences, consider optimizing or expanding those strategies. Continuous 
+monitoring and adaptation are key to maximizing the impact of marketing 
+initiatives.
+5. Implement Targeted Customer Engagement Strategies:
+ - Develop targeted strategies to enhance customer engagement and encourage 
+repeat transactions. This could include loyalty programs, personalized offers, or 
+improvements to the overall customer experience. Understanding customer 
+preferences and behaviors is critical for building long-term relationships and 
+increasing customer lifetime value.
+6. Regularly Monitor and Update Strategies:
+ - Establish a system for regular monitoring of sales metrics and customer 
+behaviors. This allows stakeholders to adapt strategies in real-time based on 
+changing market conditions and consumer preferences.
+By acting on these insights and recommendations, stakeholders can not only 
+address the observed differences in total sales and average customers per 
+transaction but also enhance the overall performance and competitiveness of 
+their business.
+def compare_trial_control_pairs(trial_data, control_data):
+ # Task 5a: Testing if total sales are significantly different
+ t_stat, p_value = ttest_ind(trial_data['TOT_SALES'], control_data['TOT_SALES'])
+ 
+ print(f'T-test for total sales: t-statistic = {t_stat}, p-value = {p_value}')
+ if p_value < 0.05:
+ print('Total sales are significantly different.')
+ else:
+ print('Total sales are not significantly different.')
+ # Task 5b: Identifying the driver of change
+ trial_customers_per_transaction = trial_data['LYLTY_CARD_NBR'] / 
+trial_data['TXN_ID']
+ control_customers_per_transaction = control_data['LYLTY_CARD_NBR'] / 
+control_data['TXN_ID']
+ # Compare customers per transaction
+ t_stat_cust, p_value_cust = ttest_ind(trial_customers_per_transaction, 
+control_customers_per_transaction)
+ print(f'T-test for customers per transaction: t-statistic = {t_stat_cust}, p-value = 
+{p_value_cust}')
+ if p_value_cust < 0.05:
+ print('Customers per transaction are significantly different.')
+ else:
+ print('Customers per transaction are not significantly different.')
+compare_trial_control_pairs(trial_data,control_data)
+Output:
+T-test for total sales: t-statistic = -12.85948293862905, p-value = 1.746051651453
+781e-36
+Total sales are significantly different.
+T-test for customers per transaction: t-statistic = 7.8453476787689205, p-value = 
+6.8183086239593146e-15
+Customers per transaction are significantly different.
+
