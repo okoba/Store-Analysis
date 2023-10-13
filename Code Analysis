@@ -1,0 +1,38 @@
+In this Python script, the following key steps are executed:
+
+1. **Data Loading and Preparation:**
+   - The script starts by importing necessary libraries and loading transactional data from a CSV file into a Pandas DataFrame named `data`.
+   - The 'DATE' column is converted to a datetime format, and new columns for 'Month' and 'Year' are created.
+
+2. **Monthly Sales Metrics Calculation:**
+   - Monthly sales metrics are calculated by aggregating the data based on the store number (`STORE_NBR`) and month (`Month`). The metrics include total sales, unique customers, and transaction count.
+
+3. **Average Transactions per Customer:**
+   - The script calculates the average transactions per customer for each store and month, providing insights into customer behavior.
+
+4. **Visualizations:**
+   - Visualizations are created to understand the trends in total sales over months for a specific store (e.g., store 77).
+   - Line charts depict total sales and average transactions per customer over time.
+
+5. **Control Store Selection:**
+   - A function named `calculate_distance_metric` is defined to calculate the Pearson correlation between a trial store and candidate control stores. The output provides insights into the similarity of sales patterns.
+
+6. **Control Store Selection and Output:**
+   - Control stores are selected for a trial store based on high correlations. The output indicates the designated control stores for each trial store.
+
+7. **Hypothesis Testing:**
+   - The script conducts t-tests to determine whether there are significant differences in total sales and average customers per transaction between a trial store and its designated control store.
+
+8. **Analysis and Recommendations:**
+   - The analysis provides insights into significant differences in total sales and average customers per transaction. Recommendations are suggested based on these insights, including investigating factors impacting total sales and exploring customer behavior.
+
+9. **Additional Functions:**
+   - A function named `compare_trial_control_pairs` is defined to perform t-tests and identify significant differences between trial and control stores for total sales and average customers per transaction.
+
+10. **Insights and Recommendations:**
+    - The script provides detailed insights and recommendations based on the results of hypothesis testing, guiding stakeholders on potential areas for improvement and strategies to optimize store performance.
+
+11. **Continuous Monitoring and Optimization:**
+    - The final section emphasizes continuous monitoring, adjustment of strategies, and consideration of external variables for ongoing optimization.
+
+Overall, the script combines data analysis, statistical testing, and visualizations to provide a comprehensive evaluation of store performance and actionable recommendations for improvement.
